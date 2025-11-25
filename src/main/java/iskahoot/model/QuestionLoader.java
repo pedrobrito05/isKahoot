@@ -11,12 +11,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class QuestionLoader {
-
     public static Quiz loadFromFile(String resourcePath) {
 
 
         try (Reader reader = new InputStreamReader(
                 QuestionLoader.class.getResourceAsStream(resourcePath))) {
+
 
             if (reader == null) {
                 System.out.println("Arquivo " + resourcePath + " não encontrado no classpath!");

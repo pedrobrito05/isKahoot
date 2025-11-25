@@ -6,54 +6,28 @@ import iskahoot.objects.Team;
 import java.util.*;
 
 public class GameState {
+    ArrayList<Game> games;
 
-    private final String roomCode;        // id da sala
-    private List<Team> team;
-    private Quiz quiz;
-    private int currentQuestionIndex;
+    public GameState(){
+        games=new ArrayList<>();
+    }
+    public synchronized void add(Game game) {
+        games.add(game);
+    }
 
-    private final List<String> playerAnswers;
-    //indice k representa a resposta do jogador de indice k
-
-    private boolean gameStarted;
-    private boolean gameFinished;
-
-    public GameState(String roomCode, int numberOfTeams) {
-        this.roomCode = roomCode;
-
-        for (int i = 0; i < numberOfTeams; i++) {
-            Team team=new Team("Equipa" + (i + 1));
-            team.setScore(0);
+    public synchronized Game getGame(String roomCode) {
+        for (Game a: games){
+            if (a.getRoomCode().equals(roomCode)){
+                return a;
+            }
         }
-
-        this.currentQuestionIndex = 0;
-
-        this.playerAnswers = new ArrayList<>();
-
-        this.gameStarted = false; //so inicia quando todos os jogadores se conectam
-        this.gameFinished = false;
+        System.out.println("No game found");
+        return null;
     }
 
-
-
-    public Question getCurrentQuestion() {
-        return quiz.questions.get(currentQuestionIndex);
+    public void removeGame(String roomCode){
+        games.removeIf(a-> a.getRoomCode().equals(roomCode));
     }
 
-    public void submitAnswer(int playerIndex, String answer) {
-        playerAnswers.set(playerIndex, answer);
-    }
-
-    public List<String> getPlayerAnswers() {
-        return playerAnswers;
-    }
-
-    public void nextQuestion() {
-        currentQuestionIndex++;
-    }
-
-    public boolean isGameFinished() {
-        return currentQuestionIndex >= quiz.questions.size();
-    }
 
 }
