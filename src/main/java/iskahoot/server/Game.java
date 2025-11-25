@@ -5,13 +5,13 @@ import iskahoot.objects.Team;
 
 import java.util.*;
 
-public class Game {
+public class Game{
 
     private final String roomCode;        // id da sala
     private List<Team> team;
     private Quiz quiz;
     private int currentQuestionIndex;
-
+    private boolean isActive;
     private final List<String> playerAnswers;
     //indice k representa a resposta do jogador de indice k
 
@@ -30,8 +30,7 @@ public class Game {
 
         this.playerAnswers = new ArrayList<>();
 
-        this.gameStarted = false; //so inicia quando todos os jogadores se conectam
-        this.gameFinished = false;
+        this.isActive=true;
     }
 
 
@@ -56,4 +55,11 @@ public class Game {
         return currentQuestionIndex >= quiz.questions.size();
     }
 
+    public String getRoomCode(){
+        return roomCode;
+    }
+
+    public void finishGame(){
+        this.isActive=false;
+    }
 }
