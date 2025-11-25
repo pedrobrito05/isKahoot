@@ -1,0 +1,9 @@
+package iskahoot.model;
+
+
+import java.util.List;
+
+public class Quiz {
+    public String name;
+    public List<Question> questions;
+}
