@@ -1,5 +1,8 @@
 package iskahoot.server;
 
+
+import java.util.ArrayList;
+
 public class GameState {
     ArrayList<Game> games;
 
