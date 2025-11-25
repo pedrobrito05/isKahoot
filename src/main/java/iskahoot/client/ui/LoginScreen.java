@@ -19,8 +19,6 @@ public class LoginScreen {
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
         // Campos de input
-        JTextField ipField = new JTextField("127.0.0.1");
-        JTextField portField = new JTextField("12345");
         JTextField roomField = new JTextField("Sala1");
         JTextField teamField = new JTextField("EquipaA");
         JTextField userField = new JTextField();
@@ -28,14 +26,10 @@ public class LoginScreen {
         JButton connectBtn = new JButton("Ligar");
 
         connectBtn.addActionListener(e -> {
-            String ip = ipField.getText();
-            String port = portField.getText();
             String room = roomField.getText();
             String team = teamField.getText();
             String username = userField.getText();
 
-            System.out.println("IP: " + ip);
-            System.out.println("Porta: " + port);
             System.out.println("Sala: " + room);
             System.out.println("Equipa: " + team);
             System.out.println("Username: " + username);
@@ -53,11 +47,6 @@ public class LoginScreen {
         });
 
         // Adiciona componentes ao layout
-        gbc.gridx = 0; gbc.gridy = 0; panel.add(new JLabel("Endereço IP:"), gbc);
-        gbc.gridx = 1; panel.add(ipField, gbc);
-
-        gbc.gridx = 0; gbc.gridy = 1; panel.add(new JLabel("Porta:"), gbc);
-        gbc.gridx = 1; panel.add(portField, gbc);
 
         gbc.gridx = 0; gbc.gridy = 2; panel.add(new JLabel("Sala:"), gbc);
         gbc.gridx = 1; panel.add(roomField, gbc);
@@ -78,5 +67,6 @@ public class LoginScreen {
         frame.setSize(400, 300);
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
+
     }
 }
