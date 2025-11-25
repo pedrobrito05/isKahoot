@@ -1,9 +1,4 @@
 package iskahoot.server;
-import iskahoot.model.Question;
-import iskahoot.model.Quiz;
-import iskahoot.objects.Team;
-
-import java.util.*;
 
 public class GameState {
     ArrayList<Game> games;
