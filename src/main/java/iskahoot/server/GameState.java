@@ -22,7 +22,7 @@ public class GameState {
         return null;
     }
 
-    public void removeGame(String roomCode){
+    public synchronized void removeGame(String roomCode){
         games.removeIf(a-> a.getRoomCode().equals(roomCode));
     }
 

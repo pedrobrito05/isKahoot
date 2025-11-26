@@ -2,7 +2,7 @@ package iskahoot.client;
 
 import iskahoot.client.ui.GameScreen;
 
-public class ClientMain {
+public class ClientMain extends Thread{
 
     public static void main(String[] args) {
 
