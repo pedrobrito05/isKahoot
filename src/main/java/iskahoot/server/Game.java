@@ -5,7 +5,7 @@ import iskahoot.objects.Team;
 
 import java.util.*;
 
-public class Game{
+public class Game extends Thread{
 
     private final String roomCode;        // id da sala
     private List<Team> team;
@@ -72,9 +72,4 @@ public class Game{
         return getCorrectAnswer()==indice;
     }
 
-
-    //apenas para teste
-    public String getQuestion(int index){
-        return quiz.getQuestion(index).getText();
-    }
 }
