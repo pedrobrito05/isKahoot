@@ -5,7 +5,7 @@ import iskahoot.objects.Team;
 
 import java.util.*;
 
-public class Game{
+public class Game extends Thread{
 
     private final String roomCode;        // id da sala
     private List<Team> team;
@@ -18,9 +18,9 @@ public class Game{
     private boolean gameStarted;
     private boolean gameFinished;
 
-    public Game(String roomCode, int numberOfTeams) {
+    public Game(String roomCode, int numberOfTeams, Quiz quiz) {
         this.roomCode = roomCode;
-
+        this.quiz=quiz;
         for (int i = 0; i < numberOfTeams; i++) {
             Team team=new Team("Equipa" + (i + 1));
             team.setScore(0);
@@ -62,4 +62,14 @@ public class Game{
     public void finishGame(){
         this.isActive=false;
     }
+
+    //retorna o indice da resposta correta da current pergunta
+    public int getCorrectAnswer(){
+        return quiz.getQuestion(currentQuestionIndex).getCorrectIndex();
+    }
+
+    public synchronized boolean isAnswerCorrect(int indice){
+        return getCorrectAnswer()==indice;
+    }
+
 }

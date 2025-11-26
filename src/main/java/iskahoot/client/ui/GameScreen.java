@@ -32,7 +32,7 @@ public class GameScreen {
         showQuestion(quiz.questions.get(currentQuestionIndex));
     }
 
-    private void showQuestion(Question question) {
+    public void showQuestion(Question question) {
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
