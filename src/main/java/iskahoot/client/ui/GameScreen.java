@@ -2,23 +2,28 @@ package iskahoot.client.ui;
 
 import javax.swing.*;
 import java.awt.*;
+import java.io.IOException;
 import java.util.List;
+import iskahoot.model.Connection;
+import iskahoot.model.Answer;
 import iskahoot.model.Question;
 import iskahoot.model.QuestionLoader;
 import iskahoot.model.Quiz;
 
 public class GameScreen {
 
+
+    private final Connection connection;
     private final JFrame frame;
     private final String username;
     private final Quiz quiz;
     private int currentQuestionIndex = 0;
     private int points = 0;
 
-    public GameScreen(String username) {
+    public GameScreen(String username, Connection connection) {
         this.username = username;
         this.frame = new JFrame("IsKahoot - GameScreen");
-
+        this.connection=connection;
         // Carrega perguntas do JSON local
         quiz = QuestionLoader.loadFromFile("/questions.json");
 
@@ -28,11 +33,16 @@ public class GameScreen {
     }
 
     // Método para iniciar a UI
-    public void show() {
+    public void show() throws IOException {
         showQuestion(quiz.questions.get(currentQuestionIndex));
     }
 
-    public void showQuestion(Question question) {
+    public void showQuestion(Question question) throws IOException {
+
+
+
+
+
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
@@ -85,24 +95,15 @@ public class GameScreen {
                 int selIndex = selectedIndex[0];
                 System.out.println(username + " escolheu: " + question.getOptions().get(selIndex));
 
-                if (selIndex == question.getCorrectIndex()) {
-                    System.out.println("Resposta correta! +" + question.getPoints() + " pontos.");
-                    points += question.getPoints();
-                } else {
-                    System.out.println("Resposta incorreta. Resposta certa: " +
-                            question.getOptions().get(question.getCorrectIndex()));
-                }
 
-                currentQuestionIndex++;
-                if (currentQuestionIndex < quiz.questions.size()) {
-                    showQuestion(quiz.questions.get(currentQuestionIndex));
-                } else {
-                    JOptionPane.showMessageDialog(frame, "Fim do quiz!\nFez: " + points + " pontos",
-                            "Fim", JOptionPane.INFORMATION_MESSAGE);
-                    frame.dispose();
+                Answer answer=new Answer(selIndex, 0);
+                try {
+                    connection.send(answer);
+                } catch (IOException ex) {
+                    throw new RuntimeException(ex);
                 }
-            } else {
-                System.out.println(username + " não selecionou nenhuma opção.");
+                frame.dispose();
+
             }
         });
 

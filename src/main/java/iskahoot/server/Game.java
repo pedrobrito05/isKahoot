@@ -72,4 +72,5 @@ public class Game extends Thread{
         return getCorrectAnswer()==indice;
     }
 
+
 }

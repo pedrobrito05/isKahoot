@@ -1,5 +1,6 @@
 package iskahoot.server;
 
+import iskahoot.model.Answer;
 import iskahoot.model.QuestionLoader;
 import iskahoot.model.Quiz;
 
@@ -28,7 +29,7 @@ public class Server {
     //ESTOU APENAS A FAZER O TESTE DE LIGACAO ENTRE CLIENTE E SERVIDOR
     public static void main(String[] args) {
 
-        System.out.println("current question: ");
+
         Game game=new Game("11", 2, QuestionLoader.loadFromFile("/questions.json"));
 
         try (ServerSocket server = new ServerSocket(8888)) {
@@ -40,8 +41,15 @@ public class Server {
             ObjectOutputStream out = new ObjectOutputStream(client.getOutputStream());
             ObjectInputStream in = new ObjectInputStream(client.getInputStream());
 
-            //fazer um array com dois espacos para enviar para o cliente com a pergunta e as opcoes
-            out.writeObject(game.getCurrentQuestion());
+            //APENAS TESTE DE ENVIAR E RECEBER RESPOSTA
+            while(!game.isGameFinished()){
+                out.writeObject(game.getCurrentQuestion());
+                Object obj=in.readObject();
+                Answer answer=(Answer)obj;
+                System.out.println(answer.getAnswer());
+                game.nextQuestion();
+            }
+
 
 
             out.close();
