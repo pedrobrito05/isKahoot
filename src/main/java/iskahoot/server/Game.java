@@ -1,4 +1,5 @@
 package iskahoot.server;
+import iskahoot.model.Answer;
 import iskahoot.model.Question;
 import iskahoot.model.Quiz;
 import iskahoot.objects.Team;
@@ -68,8 +69,8 @@ public class Game extends Thread{
         return quiz.getQuestion(currentQuestionIndex).getCorrectIndex();
     }
 
-    public synchronized boolean isAnswerCorrect(int indice){
-        return getCorrectAnswer()==indice;
+    public synchronized boolean isAnswerCorrect(Answer answer){
+        return getCorrectAnswer()==answer.getAnswer();
     }
 
 

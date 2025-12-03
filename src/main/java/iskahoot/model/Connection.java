@@ -14,9 +14,22 @@ public class Connection {
         out=new ObjectOutputStream(client.getOutputStream());
         in=new ObjectInputStream ( client.getInputStream());
     }
+    public Connection(Socket socket) throws IOException {
+        this.client=socket;
+        this.out=new ObjectOutputStream(socket.getOutputStream());
+        this.in= new ObjectInputStream(socket.getInputStream());
+    }
 
     public synchronized void send(Answer answer) throws IOException {
         out.writeObject(answer);
+        out.flush();
+    }
+    public synchronized void send(String string) throws IOException {
+        out.writeObject(string);
+        out.flush();
+    }
+    public synchronized void send(Question question) throws IOException {
+        out.writeObject(question);
         out.flush();
     }
 
