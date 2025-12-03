@@ -99,6 +99,7 @@ public class GameScreen {
                 Answer answer=new Answer(selIndex, 0);
                 try {
                     connection.send(answer);
+                    System.out.println("envuou");
                 } catch (IOException ex) {
                     throw new RuntimeException(ex);
                 }

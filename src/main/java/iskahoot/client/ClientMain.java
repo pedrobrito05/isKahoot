@@ -25,9 +25,20 @@ public class ClientMain extends Thread{
         String roomCode = args[4];            // código da sala
         System.out.println("Username: " + username + " | Equipa: " + teamCode + " | Sala: " + roomCode);
 
+
+
         //inicia a connection
         Connection conn=new Connection(ip,port);
-        //recebe a pergunta
+
+
+
+
+        //enviar dados do cliente
+        conn.send(username);
+        conn.send(teamCode);
+        conn.send(roomCode);
+
+
 
         try {
             while (true) {
@@ -43,6 +54,7 @@ public class ClientMain extends Thread{
             }
         } catch (EOFException e) {
             System.out.println("Conexão fechada pelo servidor.");
+            conn.close();
         }
 
 
