@@ -9,7 +9,7 @@ import java.util.*;
 public class Game extends Thread{
 
     private final String roomCode;        // id da sala
-    private List<Team> team;
+    private List<Team> teams=new ArrayList<>();
     private Quiz quiz;
     private int currentQuestionIndex;
     private boolean isActive;
@@ -25,6 +25,7 @@ public class Game extends Thread{
         for (int i = 0; i < numberOfTeams; i++) {
             Team team=new Team("Equipa" + (i + 1));
             team.setScore(0);
+            teams.add(team);
         }
 
         this.currentQuestionIndex = 0;
@@ -73,5 +74,21 @@ public class Game extends Thread{
         return getCorrectAnswer()==answer.getAnswer();
     }
 
+    public synchronized void addTeam(Team team){
+        teams.add(team);
+    }
+
+    public List<Team> getTeams(){
+        return this.teams;
+    }
+
+    public Team getTeam(String teamName){
+        for(Team t: teams){
+            if(t.getTeamName().equals(teamName)){
+                return t;
+            }
+        }
+        return null;
+    }
 
 }
