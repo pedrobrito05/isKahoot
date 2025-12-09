@@ -11,11 +11,20 @@ import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.concurrent.CyclicBarrier;
 
 
 public class Server {
     public static void main(String[] args) {
+
         Game game = new Game("11", 2, QuestionLoader.loadFromFile("/questions.json"));
+
+        //cyclicbarrrier faz as threads esperarem umas pelas outras, agora teste apenas com dois jogadores
+        CyclicBarrier barrier=new CyclicBarrier(2, ()->{
+            //codigo corrido quando todos os jogadores respondem
+            System.out.println("Todos os jogadores responderam");
+            game.nextQuestion();
+        });
 
         try (ServerSocket server = new ServerSocket(8888)) {
             System.out.println("Servidor à escuta na porta 8888...");
@@ -26,7 +35,7 @@ public class Server {
 
                 // cria handler para o cliente
                 Connection conn = new Connection(client);
-                DealWithClient handler = new DealWithClient(conn, game);
+                DealWithClient handler = new DealWithClient(conn, game, barrier);
                 handler.start();
             }
 

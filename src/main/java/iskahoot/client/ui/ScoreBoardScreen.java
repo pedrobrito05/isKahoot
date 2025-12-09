@@ -1,5 +1,8 @@
 package iskahoot.client.ui;
 
+import iskahoot.objects.Team;
+import iskahoot.server.Game;
+
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
@@ -9,8 +12,7 @@ import java.awt.*;
 public class ScoreBoardScreen extends JFrame{
     private JTable table;
     private DefaultTableModel model;
-
-    public ScoreBoardScreen() {
+    public ScoreBoardScreen(Game game) {
         setTitle("Scoreboard");
         setSize(500, 450);
         setLocationRelativeTo(null);
@@ -23,7 +25,7 @@ public class ScoreBoardScreen extends JFrame{
         add(mainPanel);
 
         // Título
-        JLabel title = new JLabel("🏆 Scoreboard", SwingConstants.CENTER);
+        JLabel title = new JLabel("Scoreboard", SwingConstants.CENTER);
         title.setFont(new Font("SansSerif", Font.BOLD, 28));
         title.setForeground(Color.WHITE);
         title.setBorder(BorderFactory.createEmptyBorder(20, 10, 20, 10));
@@ -67,20 +69,22 @@ public class ScoreBoardScreen extends JFrame{
         buttonPanel.add(nextBtn);
 
         mainPanel.add(buttonPanel, BorderLayout.SOUTH);
+        addPlayerScore(game);
+
+
     }
 
     // Método para adicionar linhas ao scoreboard
-    public void addPlayerScore(int pos, String name, int score) {
-        model.addRow(new Object[]{pos, name, score});
+    public void addPlayerScore(Game game) {
+
+        for(Team team: game.getTeams()){
+            model.addRow(new Object[]{1, team.getTeamName(), team.getScore()});
+        }
     }
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            ScoreBoardScreen sc = new ScoreBoardScreen();
-            sc.addPlayerScore(1, "Ana", 2400);
-            sc.addPlayerScore(2, "Rui", 1900);
-            sc.addPlayerScore(3, "Sofia", 1300);
-            sc.setVisible(true);
-        });
+        Game game = new Game ("a", 3, null);
+        ScoreBoardScreen sc=new ScoreBoardScreen(game);
+        sc.setVisible(true);
     }
 }

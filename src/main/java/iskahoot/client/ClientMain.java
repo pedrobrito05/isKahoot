@@ -45,7 +45,6 @@ public class ClientMain extends Thread{
                 Object obj = conn.receive();
                 if (obj instanceof Question) {
                     Question question=(Question)obj;
-                    System.out.println(question);
                     GameScreen scr=new GameScreen(username, conn);
                     scr.showQuestion(question);
                 } else {
