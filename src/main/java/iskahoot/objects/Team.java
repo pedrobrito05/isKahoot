@@ -28,7 +28,7 @@ public class Team {
         teamList.add(player); return true;
     }
 
-    public int numberOfTeams(){
+    public int getNumberOfPlayers(){
        return teamList.size();
     }
 
@@ -39,4 +39,13 @@ public class Team {
     public void setScore(int score){
         this.score=score;
     }
+
+    public List<Player> getPlayers(){
+        return teamList;
+    }
+
+    public int numberOfTeams(){
+        return teamList.size();
+    }
+
 }
