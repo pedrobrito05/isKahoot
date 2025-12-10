@@ -23,7 +23,7 @@ public class GameScreen {
     public GameScreen(String username, Connection connection) {
         this.username = username;
         this.frame = new JFrame("IsKahoot - GameScreen");
-        this.connection=connection;
+        this.connection = connection;
         // Carrega perguntas do JSON local
         quiz = QuestionLoader.loadFromFile("/questions.json");
 
@@ -38,11 +38,6 @@ public class GameScreen {
     }
 
     public void showQuestion(Question question) throws IOException {
-
-
-
-
-
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
@@ -52,6 +47,11 @@ public class GameScreen {
         questionLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         questionLabel.setFont(new Font("Arial", Font.BOLD, 20));
         questionLabel.setForeground(Color.white);
+
+        JLabel timerLabel = new JLabel("30");
+        timerLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        timerLabel.setFont(new Font("Arial", Font.BOLD, 24));
+        timerLabel.setForeground(Color.RED);
 
         JPanel optionsPanel = new JPanel(new GridLayout(2, 2, 10, 10));
         optionsPanel.setBackground(Color.black);
@@ -95,19 +95,19 @@ public class GameScreen {
                 int selIndex = selectedIndex[0];
                 System.out.println(username + " escolheu: " + question.getOptions().get(selIndex));
 
-
-                Answer answer=new Answer(selIndex, 0);
+                Answer answer = new Answer(selIndex, 0);
                 try {
                     connection.send(answer);
                 } catch (IOException ex) {
                     throw new RuntimeException(ex);
                 }
                 frame.dispose();
-
             }
         });
 
         panel.add(questionLabel);
+        panel.add(Box.createVerticalStrut(10));
+        panel.add(timerLabel);
         panel.add(Box.createVerticalStrut(15));
         panel.add(optionsPanel);
         panel.add(Box.createVerticalStrut(20));
@@ -118,5 +118,27 @@ public class GameScreen {
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+        // ================= TIMER =================
+        final int[] timeLeft = {30}; // 30 segundos
+        Timer swingTimer = new Timer(1000, null);
+        swingTimer.addActionListener(e -> {
+            timeLeft[0]--;
+            timerLabel.setText(String.valueOf(timeLeft[0]));
+
+            if (timeLeft[0] <= 0) {
+                swingTimer.stop();
+                if (selectedIndex[0] == -1) {
+                    // envia resposta vazia/tempo esgotado
+                    try {
+                        connection.send(new Answer(-1, 30_000));
+                    } catch (IOException ex) {
+                        ex.printStackTrace();
+                    }
+                }
+                frame.dispose(); // fecha pergunta automaticamente
+            }
+        });
+        swingTimer.start();
     }
 }

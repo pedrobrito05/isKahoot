@@ -83,7 +83,7 @@ public class ScoreBoardScreen extends JFrame{
     }
 
     public static void main(String[] args) {
-        Game game = new Game ("a", 3, null);
+        Game game = new Game ("a", 2,2, null);
         ScoreBoardScreen sc=new ScoreBoardScreen(game);
         sc.setVisible(true);
     }
