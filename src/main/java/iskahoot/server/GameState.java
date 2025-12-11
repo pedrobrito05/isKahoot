@@ -1,9 +1,10 @@
 package iskahoot.server;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class GameState {
-    ArrayList<Game> games;
+    private ArrayList<Game> games;
 
     public GameState(){
         games=new ArrayList<>();
@@ -24,6 +25,10 @@ public class GameState {
 
     public synchronized void removeGame(String roomCode){
         games.removeIf(a-> a.getRoomCode().equals(roomCode));
+    }
+
+    public List<Game> getGames(){
+        return games;
     }
 
 
