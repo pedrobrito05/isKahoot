@@ -30,4 +30,6 @@ public class Question implements Serializable {
     public List<String> getOptions() { return options; }
 
     public boolean isTeamQuestion() { return team; }
+
+
 }

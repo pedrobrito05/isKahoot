@@ -10,16 +10,20 @@ import java.net.Socket;
 public class Server {
 
     public static void main(String[] args) {
-
         GameState games = new GameState();
 
-        games.add(new Game("11", 2, 2,
-                QuestionLoader.loadFromFile("/questions.json")));
+        Thread menu=new ServerTUI(games);
+
+//        games.add(new Game("11", 2, 1,
+//                QuestionLoader.loadFromFile("/questions.json")));
+//        games.add(new Game("12", 2, 1,
+//                QuestionLoader.loadFromFile("/questions.json")));
+
 
 
         try (ServerSocket server = new ServerSocket(8888)) {
             System.out.println("Servidor à escuta na porta 8888...");
-
+            menu.start();
             while (true) {
                 Socket client = server.accept();
                 System.out.println("Cliente ligado!");
@@ -29,10 +33,13 @@ public class Server {
                 // DealWithClient escolhe o game certo pelo roomCode
                 Thread clients=new DealWithClient(conn, games);
                 clients.start();
+
             }
 
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
+
+    //TUI
 }
