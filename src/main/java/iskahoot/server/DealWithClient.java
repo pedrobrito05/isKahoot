@@ -1,141 +1,246 @@
 package iskahoot.server;
 
+
 import iskahoot.model.Answer;
+
 import iskahoot.model.Connection;
+
 import iskahoot.objects.Player;
 
+
 import java.io.IOException;
+
 import java.util.concurrent.CyclicBarrier;
+
 
 public class DealWithClient extends Thread {
 
+
     private final Connection conn;
+
     private final GameState games;
+
     private Game game;
+
     private String username;
 
-    // Objeto usado apenas para sincronizar as duas threads (o "Monitor")
-    private final Object lock = new Object();
+    private String teamCode;
 
-    // Variável partilhada onde a thread de leitura coloca a resposta
-    private Answer sharedAnswer = null;
+    private String roomCode;
 
-    // Controlo para parar a thread de leitura no fim
-    private volatile boolean running = true;
+
+
+    private Answer receivedAnswer=null;
+
+    private boolean answer=false;
 
     public DealWithClient(Connection conn, GameState games) {
+
         this.conn = conn;
+
         this.games = games;
+
     }
+
 
     @Override
+
     public void run() {
+
+        long tempo1=0,tempo2,tempo3;
+
+
         try {
-            // --- HANDSHAKE INICIAL ---
+
+// Receber identificação inicial
+
             username = (String) conn.receive();
-            String teamCode = (String) conn.receive();
-            String roomCode = (String) conn.receive();
+
+            teamCode = (String) conn.receive();
+
+            roomCode = (String) conn.receive();
+
+
+// Receber game
 
             game = games.getGame(roomCode);
+
+
             if (game == null) {
+
+                System.err.println("No game found for room: " + roomCode);
+
                 conn.close();
+
                 return;
+
             }
+
+
+// Adicionar jogador à equipa
 
             Player player = new Player(username);
+
+
             if (game.canJoinTeam(teamCode)) {
+
                 game.getTeam(teamCode).addPlayer(player);
-                game.playerJoined();
+
+                game.playerJoined(); // incrementa o contador de jogadores juntados
+
             } else {
+
                 conn.send("Equipa cheia");
-                conn.close();
+
                 return;
+
             }
 
-            game.waitForGameStart();
+            game.waitForGameStart(); // <-- só depois disso o cliente começa a mostrar perguntas
 
-            // --- INICIAR THREAD DE LEITURA (LISTENER) ---
-            // Esta thread fica num loop infinito a ler do socket e a avisar a thread principal
-            Thread listenerThread = new Thread(() -> {
-                while (running) {
-                    try {
-                        Object obj = conn.receive(); // Bloqueia aqui
 
-                        if (obj instanceof Answer) {
-                            synchronized (lock) {
-                                sharedAnswer = (Answer) obj; // Guarda a resposta
-                                lock.notify(); // ACORDA a thread principal imediatamente
-                            }
-                        }
-                    } catch (Exception e) {
-                        // Se der erro na leitura (ex: socket fechou), paramos o loop
-                        if (running) System.out.println("Listener parou para " + username);
-                        break;
-                    }
-                }
-            });
-            listenerThread.start();
+            if (game.getTeam(teamCode) != null) {
 
-            // --- LOOP DO JOGO ---
+                game.getTeam(teamCode).addPlayer(player);
+
+            } else {
+
+                System.err.println("Equipa não existe ou está cheia");
+
+                return;
+
+            }
+
+
+
+
+// Loop principal do jogo
+
             while (!game.isGameFinished()) {
 
-                // Limpar resposta anterior antes de enviar nova pergunta
-                synchronized (lock) {
-                    sharedAnswer = null;
-                }
 
                 try {
+
+// Enviar pergunta atual
+
                     conn.send(game.getCurrentQuestion());
+
+
                 } catch (IOException e) {
+
+                    System.err.println("Erro ao enviar pergunta para " + username);
+
                     break;
+
                 }
 
-                long tempoInicio = System.currentTimeMillis();
-                Answer finalAnswer = null;
 
-                // --- ESPERAR PELA RESPOSTA OU TIMEOUT ---
-                synchronized (lock) {
-                    // Se a resposta ainda não chegou, vamos dormir
-                    if (sharedAnswer == null) {
+                Object obj;
+
+                try {
+
+                    obj = conn.receive();
+
+                    tempo2 = System.currentTimeMillis(); // Para o tempo assim que recebe
+
+                } catch (IOException | ClassNotFoundException e) {
+
+                    System.err.println("Erro ao receber resposta do cliente " + username);
+
+                    break;
+
+                }
+
+
+                if (obj instanceof Answer) {
+
+                    Answer answer = (Answer) obj;
+
+                    System.out.println("Resposta recebida de " + username);
+
+
+
+
+
+                    CyclicBarrier currentBarrier = game.getBarrier();
+
+                    ModifiedCountdownLatch currentLatch = (currentBarrier == null) ? game.getLatch() : null;
+
+
+                    if (currentBarrier != null) {
+
                         try {
-                            // Espera 30s OU até que o listener faça notify()
-                            lock.wait(30_000);
-                        } catch (InterruptedException e) {
+
+                            currentBarrier.await();
+
+                        } catch (Exception e) {
+
                             e.printStackTrace();
+
                         }
+
                     }
-                    // Quando o wait acaba (ou pelo tempo, ou pelo notify), pegamos no valor
-                    finalAnswer = sharedAnswer;
-                }
-                // ----------------------------------------
 
-                if (finalAnswer != null) {
-                    long tempoFim = System.currentTimeMillis();
-                    System.out.println(username + " respondeu: " + finalAnswer.getAnswer() + " (" + (tempoFim-tempoInicio) + "ms)");
-                } else {
-                    System.out.println("Timeout: " + username + " não respondeu.");
-                    finalAnswer = new Answer(-1, 30_000);
+                    else if (currentLatch != null) {
+
+// Usamos a variável LOCAL 'currentLatch'
+
+                        currentLatch.countdown();
+
+
+                        try {
+
+// Mesmo que o countdown tenha metido o game.latch a null,
+
+                            currentLatch.await();
+
+                        } catch (InterruptedException e) {
+
+                            e.printStackTrace();
+
+                        }
+
+                    }
+
+                    else {
+
+                        System.err.println("Erro: Nenhum mecanismo de sincronização definido!");
+
+                    }
+
                 }
 
-                // Sincronização (Barreiras)
-                CyclicBarrier currentBarrier = game.getBarrier();
-                ModifiedCountdownLatch currentLatch = (currentBarrier == null) ? game.getLatch() : null;
 
-                if (currentBarrier != null) {
-                    try { currentBarrier.await(); } catch (Exception e) {}
-                } else if (currentLatch != null) {
-                    currentLatch.countdown();
-                    try { currentLatch.await(); } catch (InterruptedException e) {}
-                }
+// Cálculo do tempo
+
+                tempo3 = tempo2 - tempo1;
+
+                System.out.println(username + " demorou " + tempo3 + "ms a responder");
+
             }
 
+
         } catch (Exception e) {
+
+            System.err.println("Erro inesperado no DealWithClient: " + e.getMessage());
+
             e.printStackTrace();
+
+
         } finally {
-            running = false; // Avisa o listener para parar (se não estiver bloqueado no receive)
+
             try {
-                conn.close(); // Isto vai fazer o receive() lançar exceção e matar o listener
-            } catch (IOException e) {}
+
+                conn.close();
+
+            } catch (IOException e) {
+
+                System.err.println("Erro ao fechar ligação do cliente " + username);
+
+            }
+
         }
+
     }
-}
+
+} 
