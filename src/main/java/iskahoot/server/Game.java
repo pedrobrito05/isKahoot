@@ -20,7 +20,7 @@ public class Game {
     private int maxPlayers;
     private boolean gameStarted=false;
     private int connectedPlayers=0;
-
+    private int numberOfTeams;
     // Mecanismos de sincronização
     private CyclicBarrier barrier;
     private ModifiedCountdownLatch latch;
@@ -32,6 +32,7 @@ public class Game {
         this.playersPerTeam=playersPerTeam;
         this.maxPlayers=playersPerTeam*numberOfTeams;
         this.roomCode = roomCode;
+        this.numberOfTeams=numberOfTeams;
         this.quiz = quiz;
         for (int i = 0; i < numberOfTeams; i++) {
             Team team = new Team("Equipa" + (i + 1));
@@ -172,11 +173,7 @@ public class Game {
     }
 
     public int numberOfPlayers() {
-        int a = 0;
-        for (Team t : teams) {
-            a += t.getNumberOfPlayers();
-        }
-        return a;
+        return numberOfTeams * playersPerTeam;
     }
 
     // Mantido para compatibilidade, caso seja chamado externamente,
