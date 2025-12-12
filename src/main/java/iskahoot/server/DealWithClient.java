@@ -112,8 +112,7 @@ public class DealWithClient extends Thread {
 
 
                 try {
-                    tempo1 = System.currentTimeMillis();
-
+                    tempo1=System.currentTimeMillis();
 // Enviar pergunta atual
 
                     conn.send(game.getCurrentQuestion());
@@ -176,7 +175,7 @@ public class DealWithClient extends Thread {
 
                     else if (currentLatch != null) {
 
-                    // Usamos a variável LOCAL 'currentLatch'
+                        // Usamos a variável LOCAL 'currentLatch'
 
                         int fator=currentLatch.countdown();
 
@@ -185,7 +184,7 @@ public class DealWithClient extends Thread {
 
                         try {
 
-                        // Mesmo que o countdown tenha metido o game.latch a null,
+                            // Mesmo que o countdown tenha metido o game.latch a null,
 
                             currentLatch.await();
 
@@ -203,10 +202,12 @@ public class DealWithClient extends Thread {
 
                     }
                     tempo3 = tempo2 - tempo1;
-
                     System.out.println(username + " demorou " + tempo3 + "ms a responder");
-
                 }
+
+
+
+
 
 
             }

@@ -29,7 +29,7 @@ public class Team {
     }
 
     public int getNumberOfPlayers(){
-       return teamList.size();
+        return teamList.size();
     }
 
     public int getScore(){
