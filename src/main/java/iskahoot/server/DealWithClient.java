@@ -112,7 +112,7 @@ public class DealWithClient extends Thread {
 
 
                 try {
-
+                    tempo1=System.currentTimeMillis();
 // Enviar pergunta atual
 
                     conn.send(game.getCurrentQuestion());
@@ -201,15 +201,14 @@ public class DealWithClient extends Thread {
                         System.err.println("Erro: Nenhum mecanismo de sincronização definido!");
 
                     }
-
+                    tempo3 = tempo2 - tempo1;
+                    System.out.println(username + " demorou " + tempo3 + "ms a responder");
                 }
 
 
-// Cálculo do tempo
 
-                tempo3 = tempo2 - tempo1;
 
-                System.out.println(username + " demorou " + tempo3 + "ms a responder");
+
 
             }
 
