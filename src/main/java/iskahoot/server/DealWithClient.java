@@ -6,6 +6,7 @@ import iskahoot.model.Answer;
 import iskahoot.model.Connection;
 
 import iskahoot.objects.Player;
+import iskahoot.objects.Team;
 
 
 import java.io.IOException;
@@ -64,7 +65,8 @@ public class DealWithClient extends Thread {
 // Receber game
 
             game = games.getGame(roomCode);
-
+            Player player = new Player(username);
+            Team team=new Team(teamCode);
 
             if (game == null) {
 
@@ -79,7 +81,7 @@ public class DealWithClient extends Thread {
 
 // Adicionar jogador à equipa
 
-            Player player = new Player(username);
+
 
 
             if (game.canJoinTeam(teamCode)) {
@@ -110,8 +112,7 @@ public class DealWithClient extends Thread {
 
 
                 try {
-                    tempo1 = System.currentTimeMillis();
-
+                    tempo1=System.currentTimeMillis();
 // Enviar pergunta atual
 
                     conn.send(game.getCurrentQuestion());
@@ -174,14 +175,16 @@ public class DealWithClient extends Thread {
 
                     else if (currentLatch != null) {
 
-// Usamos a variável LOCAL 'currentLatch'
+                        // Usamos a variável LOCAL 'currentLatch'
 
-                        currentLatch.countdown();
+                        int fator=currentLatch.countdown();
 
+                        team.addScore(fator*game.getCurrentQuestion().getPoints());
+                        System.out.println("Player "+player.getPlayerName()+"-->"+fator*game.getCurrentQuestion().getPoints()+ "pontos");
 
                         try {
 
-// Mesmo que o countdown tenha metido o game.latch a null,
+                            // Mesmo que o countdown tenha metido o game.latch a null,
 
                             currentLatch.await();
 
@@ -199,10 +202,12 @@ public class DealWithClient extends Thread {
 
                     }
                     tempo3 = tempo2 - tempo1;
-
                     System.out.println(username + " demorou " + tempo3 + "ms a responder");
-
                 }
+
+
+
+
 
 
             }
