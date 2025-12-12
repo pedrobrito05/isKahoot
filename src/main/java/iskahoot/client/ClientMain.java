@@ -70,7 +70,7 @@ public class ClientMain {
             // 5. Se o loop quebrar normalmente, mostra tela de fim de jogo
             SwingUtilities.invokeLater(() -> {
                 if (screenHolder[0] != null) {
-                    screenHolder[0].showGameOver("Fim do Jogo! Obrigado por jogar.");
+                    screenHolder[0].showGameOver("Fim do Jogo");
                 }
             });
 

@@ -14,11 +14,6 @@ public class Server {
 
         Thread menu=new ServerTUI(games);
 
-//        games.add(new Game("11", 2, 1,
-//                QuestionLoader.loadFromFile("/questions.json")));
-//        games.add(new Game("12", 2, 1,
-//                QuestionLoader.loadFromFile("/questions.json")));
-
 
 
         try (ServerSocket server = new ServerSocket(8888)) {
