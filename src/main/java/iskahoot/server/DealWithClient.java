@@ -99,17 +99,7 @@ public class DealWithClient extends Thread {
             game.waitForGameStart(); // <-- só depois disso o cliente começa a mostrar perguntas
 
 
-            if (game.getTeam(teamCode) != null) {
 
-                game.getTeam(teamCode).addPlayer(player);
-
-            } else {
-
-                System.err.println("Equipa não existe ou está cheia");
-
-                return;
-
-            }
 
 
 
