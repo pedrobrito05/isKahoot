@@ -190,7 +190,7 @@ public class DealWithClient extends Thread {
                         System.out.println("Team: "+team.getTeamName()+": "+team.getScore());
                         try {
 
-                        // Mesmo que o countdown tenha metido o game.latch a null,
+                        // Mesmo que oa countdown tenha metido o game.latch a null,
 
                             currentLatch.await();
 
