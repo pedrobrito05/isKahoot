@@ -8,10 +8,6 @@ import javax.swing.*;
 import java.io.EOFException;
 import java.io.IOException;
 
-/**
- * Classe principal do lado do cliente.
- * Responsável pela comunicação com o servidor e controlo do fluxo da UI.
- */
 public class ClientMain {
 
     public static void main(String[] args) {
