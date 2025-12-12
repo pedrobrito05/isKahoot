@@ -48,4 +48,11 @@ public class Team {
         return teamList.size();
     }
 
+    public boolean hasPlayer(Player p){
+        return teamList.contains(p);
+    }
+
+    public void addScore(int score){
+        this.score+=score;
+    }
 }

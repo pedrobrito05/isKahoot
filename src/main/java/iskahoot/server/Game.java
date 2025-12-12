@@ -3,6 +3,7 @@ package iskahoot.server;
 import iskahoot.model.Answer;
 import iskahoot.model.Question;
 import iskahoot.model.Quiz;
+import iskahoot.objects.Player;
 import iskahoot.objects.Team;
 
 import java.util.ArrayList;
@@ -132,7 +133,7 @@ public class Game {
         return latch;
     }
 
-    // --- FIM DA LÓGICA DE SINCRONIZAÇÃO ---
+
 
     public boolean isGameFinished() {
         return currentQuestionIndex >= quiz.questions.size();
@@ -204,5 +205,24 @@ public class Game {
                 wait();
             } catch (InterruptedException ignored) {}
         }
+    }
+
+    public Team getTeam(Player player){
+        for (Team t: teams){
+            if(t.hasPlayer(player)){
+                return t;
+            }
+        }
+        System.out.println("nao ha players");
+        return null;
+    }
+
+    public static void main(String[] args){
+        Game game=new Game("1", 2, 1, null);
+        Team team=new Team("name");
+        Player p=new Player("Name");
+        game.addTeam(team);
+        team.addPlayer(p);
+        System.out.println(game.getTeam(p));
     }
 }
