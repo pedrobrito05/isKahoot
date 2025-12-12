@@ -23,13 +23,11 @@ public class ServerTUI extends Thread{
             int op=scanner.nextInt();
             switch (op){
                 case 1: createGame();
-                        break;
+                    break;
                 case 2: menuPrint();
-                        break;
-                case 4: jogadores();
-                        break;
+                    break;
                 case 3: loop=false;
-                        break;
+                    break;
 
                 default: System.out.println("Opcao inválida!!!\n");
             }
@@ -45,9 +43,14 @@ public class ServerTUI extends Thread{
         Quiz quiz=QuestionLoader.loadFromFile("/questions.json");
         System.out.println("Numero de perguntas: 1 - "+quiz.numberOfQuestions()+":");
         int numberOfQuestions=scanner.nextInt();
+        if(numberOfQuestions>quiz.numberOfQuestions()) {
+            System.out.println("Número inválido");
+            return;
+
+        }
         Quiz quiz2=new Quiz("quiz", quiz.questions, numberOfQuestions);
         String roomCode=Integer.toString(r.nextInt(100000));
-        this.games.add(new Game(roomCode, numberOfTeams, playersPerTeam, QuestionLoader.loadFromFile("/questions.json")));
+        this.games.add(new Game(roomCode, numberOfTeams, playersPerTeam, quiz2));
         System.out.println("Nova sala criada:\n-Code: "+roomCode);
     }
 

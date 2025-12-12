@@ -217,6 +217,25 @@ public class Game {
         return null;
     }
 
+    public void verifyDoublePoints(Team team, int[]respostas){
+        for(int i=0; i<respostas.length-1; i++){
+
+        }
+    }
+
+    public synchronized void doubleIfAllCorrect(Team team){
+        if(team.getAnswers().size()==team.getNumberOfPlayers()){
+            for(Answer a:team.getAnswers()){
+                if(a.getAnswer()!=quiz.getQuestion(currentQuestionIndex).getCorrectIndex()){
+                    break;
+                }
+            }
+            team.doublePoints();
+        }
+
+    }
+
+
     public static void main(String[] args){
         Game game=new Game("1", 2, 1, null);
         Team team=new Team("name");

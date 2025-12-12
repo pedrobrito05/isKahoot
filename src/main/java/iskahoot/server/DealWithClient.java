@@ -11,6 +11,8 @@ import iskahoot.objects.Team;
 
 import java.io.IOException;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CyclicBarrier;
 
 
@@ -161,10 +163,12 @@ public class DealWithClient extends Thread {
 
                     if (currentBarrier != null) {
 
+
                         try {
-
+                            team.addAnswer(answer);
+                            game.doubleIfAllCorrect(team);
                             currentBarrier.await();
-
+                            System.out.println("Team: "+team.getTeamName()+": "+team.getScore());
                         } catch (Exception e) {
 
                             e.printStackTrace();
@@ -178,10 +182,12 @@ public class DealWithClient extends Thread {
                     // Usamos a variável LOCAL 'currentLatch'
 
                         int fator=currentLatch.countdown();
-
-                        team.addScore(fator*game.getCurrentQuestion().getPoints());
-                        System.out.println("Player "+player.getPlayerName()+"-->"+fator*game.getCurrentQuestion().getPoints()+ "pontos");
-
+                        //verifica se a resposta esta certa
+                        if(answer.getAnswer()==game.getCurrentQuestion().getCorrectIndex()){
+                            team.addScore(fator*game.getCurrentQuestion().getPoints());
+                            System.out.println("Team: "+team.getTeamName()+": "+team.getScore());
+                        }
+                        System.out.println("Team: "+team.getTeamName()+": "+team.getScore());
                         try {
 
                         // Mesmo que o countdown tenha metido o game.latch a null,

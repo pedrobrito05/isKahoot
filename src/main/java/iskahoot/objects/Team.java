@@ -1,5 +1,7 @@
 package iskahoot.objects;
 
+import iskahoot.model.Answer;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -7,7 +9,7 @@ public class Team {
     private String teamName;
     private List<Player> teamList=new ArrayList<>();
     private int score;
-
+    private List<Answer> answers=new ArrayList<>();
 
     public Team(String teamName){
         this.teamName=teamName;
@@ -52,7 +54,19 @@ public class Team {
         return teamList.contains(p);
     }
 
-    public void addScore(int score){
+    public synchronized void addScore(int score){
         this.score+=score;
     }
+
+    public synchronized void addAnswer(Answer answer){
+        answers.add(answer);
+    }
+    public synchronized List<Answer> getAnswers(){
+        return answers;
+    }
+    public synchronized void doublePoints(){
+        score*=2;
+        answers.clear();
+    }
+
 }
