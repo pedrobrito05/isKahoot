@@ -56,9 +56,9 @@ public class ServerTUI extends Thread{
 
 
         for (Game g: games.getGames()){
-            System.out.println("Game: "+g.getRoomCode()+" / Terminado ? : "+g.isGameFinished()+"\n");
+            System.out.println("Game: "+g.getRoomCode()+" / Terminado ? : "+g.isGameFinished());
             for(Team t:g.getTeams()){
-                System.out.println("    Team: "+t.getTeamName()+"\n");
+                System.out.println("    Team: "+t.getTeamName());
                 for(Player p: t.getPlayers()){
                     System.out.println("        Player: "+p.getPlayerName());
                 }
