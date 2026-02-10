@@ -32,6 +32,10 @@ public class Connection {
         out.writeObject(question);
         out.flush();
     }
+    public synchronized void send(Leaderboard lb) throws IOException {
+        out.writeObject(lb);
+        out.flush();
+    }
 
     public Object receive() throws IOException, ClassNotFoundException {
         return in.readObject();
