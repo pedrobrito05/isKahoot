@@ -1,6 +1,7 @@
 package iskahoot.server;
 
 import iskahoot.model.Answer;
+import iskahoot.model.Leaderboard;
 import iskahoot.model.Question;
 import iskahoot.model.Quiz;
 import iskahoot.objects.Player;
@@ -12,17 +13,18 @@ import java.util.concurrent.CyclicBarrier;
 
 public class Game {
 
-    private final String roomCode;        // id da sala
+    private final String roomCode;
     private List<Team> teams = new ArrayList<>();
     private Quiz quiz;
     private int currentQuestionIndex;
 
     private int playersPerTeam;
     private int maxPlayers;
-    private boolean gameStarted=false;
-    private int connectedPlayers=0;
+    private boolean gameStarted = false;
+    private int connectedPlayers = 0;
     private int numberOfTeams;
-    // Mecanismos de sincronização
+
+    // Sincronização
     private CyclicBarrier barrier;
     private ModifiedCountdownLatch latch;
 
@@ -30,11 +32,12 @@ public class Game {
     private boolean isActive;
 
     public Game(String roomCode, int numberOfTeams, int playersPerTeam, Quiz quiz) {
-        this.playersPerTeam=playersPerTeam;
-        this.maxPlayers=playersPerTeam*numberOfTeams;
+        this.playersPerTeam = playersPerTeam;
+        this.maxPlayers = playersPerTeam * numberOfTeams;
         this.roomCode = roomCode;
-        this.numberOfTeams=numberOfTeams;
+        this.numberOfTeams = numberOfTeams;
         this.quiz = quiz;
+
         for (int i = 0; i < numberOfTeams; i++) {
             Team team = new Team("Equipa" + (i + 1));
             team.setScore(0);
@@ -44,8 +47,6 @@ public class Game {
         this.currentQuestionIndex = 0;
         this.playerAnswers = new ArrayList<>();
         this.isActive = true;
-        // Nota: Não inicializamos o latch/barrier aqui.
-        // Eles serão criados automaticamente quando o primeiro jogador tentar responder (via ensureSyncInitialized).
     }
 
     public synchronized Question getCurrentQuestion() {
@@ -58,7 +59,6 @@ public class Game {
     }
 
     public void submitAnswer(int playerIndex, String answer) {
-        // Garante que a lista tem tamanho suficiente para evitar IndexOutOfBounds
         while (playerAnswers.size() <= playerIndex) {
             playerAnswers.add(null);
         }
@@ -69,71 +69,50 @@ public class Game {
         return playerAnswers;
     }
 
-    // --- LÓGICA DE SINCRONIZAÇÃO CORRIGIDA ---
+    // ================= SINCRONIZAÇÃO =================
 
-    /**
-     * Avança o índice da pergunta e limpa os sincronizadores antigos.
-     * Isto força o 'ensureSyncInitialized' a criar novos na próxima chamada.
-     */
-    public synchronized void nextQuestion() {
-        currentQuestionIndex++;
-        barrier = null;
-        latch = null;
-    }
-
-    /**
-     * Prepara o mecanismo de sincronização correto (Latch ou Barrier)
-     * baseado no índice da pergunta atual.
-     */
     private synchronized void prepareSync() {
         if (isGameFinished()) return;
 
-
         int numPlayers = numberOfPlayers();
-        // Evitar criar sincronização se não houver jogadores (previne erros de divisão ou bloqueios)
         if (numPlayers == 0) return;
 
         if (currentQuestionIndex % 2 == 0) {
-            // pergunta de equipa Usar ModifiedCountdownLatch
-            System.out.println("Ronda " + currentQuestionIndex + ": A configurar Latch para " + numPlayers + " jogadores.");
+            System.out.println("Ronda " + currentQuestionIndex +
+                    ": A configurar Latch para " + numPlayers + " jogadores.");
             barrier = null;
-            // IMPORTANTE: O ModifiedCountdownLatch deve ter o construtor atualizado para aceitar o 'endOfRoundAction'
-            latch = new ModifiedCountdownLatch(2, 2, 5000, numPlayers, ()->{
-                System.out.println("Todos os clientes responderam à pergunta individual");
-                nextQuestion();
-            });
+            latch = new ModifiedCountdownLatch(
+                    2, 2, 5000, numPlayers,
+                    () -> {
+                        System.out.println("Todos os clientes responderam à pergunta (Latch)");
+                        showTeamsScore();
+                        nextQuestion();
+                        startNextQuestion(); // prepara próxima ronda
+                    }
+            );
         } else {
-            // Pergunta de equipa Usar CyclicBarrier
-            System.out.println("Ronda " + currentQuestionIndex + ": A configurar Barrier para " + numPlayers + " jogadores.");
+            System.out.println("Ronda " + currentQuestionIndex +
+                    ": A configurar Barrier para " + numPlayers + " jogadores.");
             latch = null;
-            barrier = new CyclicBarrier(numPlayers,()->{
-                System.out.println("Todos os clientes responderam à pergunta individual");
+            barrier = new CyclicBarrier(numPlayers, () -> {
+                System.out.println("Todos os clientes responderam à pergunta (Barrier)");
+                teams.forEach(this::doubleIfAllCorrect); // <-- CORREÇÃO: Adicionar pontuação aqui
+                showTeamsScore();
                 nextQuestion();
+                startNextQuestion(); // prepara próxima ronda
             });
-        }
-    }
-
-    /**
-     * Método auxiliar que garante que o objeto de sincronização existe.
-     * É chamado sempre que um cliente pede o getBarrier() ou getLatch().
-     */
-    private synchronized void ensureSyncInitialized() {
-        if (barrier == null && latch == null && !isGameFinished()) {
-            prepareSync();
         }
     }
 
     public CyclicBarrier getBarrier() {
-        ensureSyncInitialized(); // Se for null, cria o correto
         return barrier;
     }
 
     public ModifiedCountdownLatch getLatch() {
-        ensureSyncInitialized(); // Se for null, cria o correto
         return latch;
     }
 
-
+    // ================= ESTADO DO JOGO =================
 
     public boolean isGameFinished() {
         return currentQuestionIndex >= quiz.questions.size();
@@ -156,12 +135,14 @@ public class Game {
         return getCorrectAnswer() == answer.getAnswer();
     }
 
+    // ================= EQUIPAS =================
+
     public synchronized void addTeam(Team team) {
         teams.add(team);
     }
 
     public List<Team> getTeams() {
-        return this.teams;
+        return teams;
     }
 
     public Team getTeam(String teamName) {
@@ -177,25 +158,22 @@ public class Game {
         return numberOfTeams * playersPerTeam;
     }
 
-    // Mantido para compatibilidade, caso seja chamado externamente,
-    // mas a lógica agora é gerida automaticamente pelo ensureSyncInitialized.
-    public void startNextQuestion() {
-        ensureSyncInitialized();
+    public synchronized void startNextQuestion() {
+        prepareSync(); // inicializa barrier/latch para a ronda atual
     }
 
     public synchronized boolean canJoinTeam(String teamName) {
         Team team = getTeam(teamName);
         if (team == null) return false;
-
-        // EXEMPLO: playersPerTeam = 3
-        return team.numberOfTeams() < playersPerTeam;
+        return team.getNumberOfPlayers() < playersPerTeam;
     }
+
     public synchronized void playerJoined() {
         connectedPlayers++;
-
         if (connectedPlayers == maxPlayers) {
             gameStarted = true;
             notifyAll();
+            startNextQuestion(); // iniciar primeira ronda
         }
     }
 
@@ -207,22 +185,65 @@ public class Game {
         }
     }
 
-    public Team getTeam(Player player){
-        for (Team t: teams){
-            if(t.hasPlayer(player)){
+    public Team getTeam(Player player) {
+        for (Team t : teams) {
+            if (t.hasPlayer(player)) {
                 return t;
             }
         }
-        System.out.println("nao ha players");
         return null;
     }
 
-    public static void main(String[] args){
-        Game game=new Game("1", 2, 1, null);
-        Team team=new Team("name");
-        Player p=new Player("Name");
-        game.addTeam(team);
-        team.addPlayer(p);
-        System.out.println(game.getTeam(p));
+    // ================= PONTUAÇÃO =================
+
+    public synchronized void doubleIfAllCorrect(Team team) {
+        if (team.getAnswers().isEmpty()) return;
+
+        int correctIndex = quiz.getQuestion(currentQuestionIndex).getCorrectIndex();
+        boolean allCorrect = true;
+        int pointsThisRound = 0;
+
+        for (Answer a : team.getAnswers()) {
+            if (a.getAnswer() == correctIndex) {
+                pointsThisRound += quiz.getQuestion(currentQuestionIndex).getPoints();
+            } else {
+                allCorrect = false;
+            }
+        }
+
+        team.addScore(pointsThisRound); // soma pontos individuais
+        if (allCorrect) {
+            team.doublePoints(); // duplica se todos acertaram
+        }
+
+        team.clearAnswers(); // limpar respostas da equipa
     }
+
+    public void showTeamsScore() {
+        for (Team t : teams) {
+            System.out.println("Team: " + t.getTeamName() + " -> " + t.getScore());
+        }
+    }
+
+    // ================= AUXILIARES =================
+
+    private synchronized void nextQuestion() {
+        currentQuestionIndex++;
+        barrier = null;
+        latch = null;
+
+        for (Team t : teams) {
+            t.clearAnswers();
+        }
+    }
+
+    public synchronized Leaderboard buildLeaderboard() {
+        Leaderboard lb = new Leaderboard();
+        for (Team t : teams) {
+            lb.addTeam(t.getTeamName(), t.getScore());
+        }
+        return lb;
+    }
+
+
 }

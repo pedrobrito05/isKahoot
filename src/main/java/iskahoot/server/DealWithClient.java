@@ -1,239 +1,100 @@
 package iskahoot.server;
 
-
 import iskahoot.model.Answer;
-
 import iskahoot.model.Connection;
-
+import iskahoot.model.Question;
 import iskahoot.objects.Player;
 import iskahoot.objects.Team;
 
-
 import java.io.IOException;
-
 import java.util.concurrent.CyclicBarrier;
-
 
 public class DealWithClient extends Thread {
 
-
     private final Connection conn;
-
     private final GameState games;
-
     private Game game;
-
     private String username;
-
     private String teamCode;
-
     private String roomCode;
 
-
-
-    private Answer receivedAnswer=null;
-
-    private boolean answer=false;
-
     public DealWithClient(Connection conn, GameState games) {
-
         this.conn = conn;
-
         this.games = games;
-
     }
 
-
     @Override
-
     public void run() {
-
-        long tempo1=0,tempo2,tempo3;
-
-
         try {
-
-// Receber identificação inicial
-
             username = (String) conn.receive();
-
             teamCode = (String) conn.receive();
-
             roomCode = (String) conn.receive();
 
-
-// Receber game
-
             game = games.getGame(roomCode);
-            Player player = new Player(username);
-            Team team=new Team(teamCode);
-
             if (game == null) {
-
-                System.err.println("No game found for room: " + roomCode);
-
                 conn.close();
-
                 return;
-
             }
 
+            Player player = new Player(username);
+            Team team = game.getTeam(teamCode);
 
-// Adicionar jogador à equipa
-
-
-
-
-            if (game.canJoinTeam(teamCode)) {
-
-                game.getTeam(teamCode).addPlayer(player);
-
-                game.playerJoined(); // incrementa o contador de jogadores juntados
-
-            } else {
-
+            if (!game.canJoinTeam(teamCode)) {
                 conn.send("Equipa cheia");
-
                 return;
-
             }
 
-            game.waitForGameStart(); // <-- só depois disso o cliente começa a mostrar perguntas
-
-
-
-
-
-
-
-// Loop principal do jogo
+            team.addPlayer(player);
+            game.playerJoined();
+            game.waitForGameStart();
 
             while (!game.isGameFinished()) {
 
+                Question question = game.getCurrentQuestion();
+                if (question == null) break;
 
-                try {
-                    tempo1=System.currentTimeMillis();
-// Enviar pergunta atual
+                conn.send(question);
 
-                    conn.send(game.getCurrentQuestion());
+                Object obj = conn.receive();
+                if (!(obj instanceof Answer)) continue;
 
+                Answer answer = (Answer) obj;
+                team.addAnswer(answer);
 
-                } catch (IOException e) {
+                CyclicBarrier barrier = game.getBarrier();
+                ModifiedCountdownLatch latch = game.getLatch();
 
-                    System.err.println("Erro ao enviar pergunta para " + username);
+                if (game.getCurrentQuestionIndex() % 2 == 0) {
 
-                    break;
-
-                }
-
-
-                Object obj;
-
-                try {
-
-                    obj = conn.receive();
-
-                    tempo2 = System.currentTimeMillis(); // Para o tempo assim que recebe
-
-                } catch (IOException | ClassNotFoundException e) {
-
-                    System.err.println("Erro ao receber resposta do cliente " + username);
-
-                    break;
-
-                }
-
-
-                if (obj instanceof Answer) {
-
-                    Answer answer = (Answer) obj;
-
-                    System.out.println("Resposta recebida de " + username);
-
-
-
-
-
-                    CyclicBarrier currentBarrier = game.getBarrier();
-
-                    ModifiedCountdownLatch currentLatch = (currentBarrier == null) ? game.getLatch() : null;
-
-
-                    if (currentBarrier != null) {
-
-                        try {
-
-                            currentBarrier.await();
-
-                        } catch (Exception e) {
-
-                            e.printStackTrace();
-
-                        }
-
+                    int factor = 1;
+                    if (latch != null) {
+                        factor = latch.countdown();
                     }
 
-                    else if (currentLatch != null) {
-
-                        // Usamos a variável LOCAL 'currentLatch'
-
-                        int fator=currentLatch.countdown();
-
-                        team.addScore(fator*game.getCurrentQuestion().getPoints());
-                        System.out.println("Player "+player.getPlayerName()+"-->"+fator*game.getCurrentQuestion().getPoints()+ "pontos");
-
-                        try {
-
-                            // Mesmo que o countdown tenha metido o game.latch a null,
-
-                            currentLatch.await();
-
-                        } catch (InterruptedException e) {
-
-                            e.printStackTrace();
-
-                        }
-
+                    if (answer.getAnswer() == question.getCorrectIndex()) {
+                        team.addScore(question.getPoints() * factor);
                     }
 
-                    else {
-
-                        System.err.println("Erro: Nenhum mecanismo de sincronização definido!");
-
+                    if (latch != null) {
+                        latch.await();
+                        conn.send(game.buildLeaderboard());
                     }
-                    tempo3 = tempo2 - tempo1;
-                    System.out.println(username + " demorou " + tempo3 + "ms a responder");
+
+                } else {
+
+                    if (barrier != null) {
+                        barrier.await();
+                        conn.send(game.buildLeaderboard());
+                    }
                 }
-
-
-
-
-
-
             }
-
 
         } catch (Exception e) {
-
-            System.err.println("Erro inesperado no DealWithClient: " + e.getMessage());
-
             e.printStackTrace();
-
-
         } finally {
-
             try {
-
                 conn.close();
-
-            } catch (IOException e) {
-
-                System.err.println("Erro ao fechar ligação do cliente " + username);
-
-            }
-
+            } catch (IOException ignored) {}
         }
-
     }
-
-} 
+}
